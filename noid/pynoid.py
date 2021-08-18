@@ -31,11 +31,25 @@ def mint(template='zek', n=None, scheme=None, naa=None):
 
     The result is appended to the scheme and naa as follows: scheme + naa + '/' + [id].
 
-    There is no checking to ensure ids are not reminted. Instead, minting can be controlled by supplying a (int) value for 'n'. It is possible to implement ordered or random minting from available ids by manipulnating this number from another program. If no 'n' is given, minting is random from within the namespace. An indicator is added between '/' and [id] to mark these ids as for short term testing only. An override may be added later to accommodate applications which don't mind getting used ids.
-nn
-    A note about 'r', 's', and 'z': 'z' indicates that a namespace should expand on its first element to accommodate any 'n' value (eg. 'de' becomes 'dde' then 'ddde' as numbers get larger). That expansion can be handled by this method. 'r' and 's' (typically meaning 'random' and 'sequential') are recognized as valid values, but ignored and must be implemented elsewhere.
+    There is no checking to ensure ids are not reminted. Instead, minting can be controlled by supplying a (int)
+    value for 'n'. It is possible to implement ordered or random minting from available ids by manipulating this
+    number from another program. If no 'n' is given, minting is random from within the namespace. An indicator is
+    added between '/' and [id] to mark these ids as for short term testing only. An override may be added later to
+    accommodate applications which don't mind getting used ids.
+
+    A note about 'r', 's', and 'z': 'z' indicates that a namespace should expand on its first element to accommodate
+    any 'n' value (eg. 'de' becomes 'dde' then 'ddde' as numbers get larger). That expansion can be handled by this
+    method. 'r' and 's' (typically meaning 'random' and 'sequential') are recognized as valid values, but ignored
+    and must be implemented elsewhere.
     """
 
+    """
+    Paul's notes:
+    - the template has two parts: prefix and mask separated by a period (.)
+    - mask[0] may be one of r, s, z
+    - adding k at the end of the template means a checkdigit should be included
+    """
+    # determine the prefix and mask
     if '.' in template:
         prefix, mask = template.rsplit('.', 1)
     else:
@@ -43,26 +57,46 @@ nn
         prefix = ''
 
     # validate the mask
-    try:
-        _validate_mask(mask)
-    except:
-        raise
+    _validate_mask(mask)
 
     if n is None:
         if mask[0] in GENTYPES:
             mask = mask[1:]
         # If we hit this point, this is a random (and therefore, short-term) identifier. 
         prefix = SHORT + prefix
-        n = randint(0, _get_total(mask) - 1)
+        n = randint(0, _get_noid_range(mask) - 1)
 
-    noid = f"{prefix}.{generate_noid(n, mask)}"
+    if prefix:
+        noid = f"{prefix}.{generate_noid(n, mask)}"
+    else:
+        noid = generate_noid(n, mask)
     if naa:
         noid = naa.strip('/') + '/' + noid
     if template[-1] == 'k':
         noid += calculate_check_digit(noid)
     if scheme:
         noid = scheme + noid
+    return noid
 
+
+def mint_(args):
+    noid = generate_noid_(args)
+    return noid
+
+
+def generate_mask(args):
+    # determine the prefix and mask
+    if '.' in template:
+        prefix, mask = template.rsplit('.', 1)
+    else:
+        mask = template
+        prefix = ''
+    # validate the mask
+    _validate_mask(mask)
+    return prefix, mask
+
+
+def generate_noid_(args):
     return noid
 
 
@@ -77,6 +111,10 @@ def validate(s):
 
 
 def generate_noid(n, mask):
+    """Generate the actual noid
+
+    :param int n:
+    """
     length = n
     noid = ''
     for char in mask[::-1]:
@@ -115,33 +153,39 @@ def _validate_mask(mask):
     """Check to make sure that we have a valid mask
 
     :param list mask: a sequence of characters
+    :return bool: whether or not the mask is valid
     """
     # check the first character
     if not (mask[0] in GENTYPES or mask[0] in DIGTYPES):
-        raise InvalidTemplateError("Template is invalid.")
+        return False
+        # raise InvalidTemplateError("Template is invalid.")
     # check the last character
     elif not (mask[-1] in CHECKDIG or mask[-1] in DIGTYPES):
-        raise InvalidTemplateError("Template is invalid.")
+        return False
+        # raise InvalidTemplateError("Template is invalid.")
     # check all other characters
     else:
         for maskchar in mask[1:-1]:
             if not (maskchar in DIGTYPES):
-                raise InvalidTemplateError("Template is invalid.")
+                return False
+                # raise InvalidTemplateError("Template is invalid.")
 
     return True
 
 
-def _get_total(mask):
-    if mask[0] == 'z':
-        total = NOLIMIT
-    else:
-        total = 1
-        for c in mask:
-            if c == 'e':
-                total *= len(XDIGIT)
-            elif c == 'd':
-                total *= len(DIGIT)
-    return total
+def _get_noid_range(mask):
+    """Given the specified mask compute the maximum number of noids availabl
+
+    :param str mask: the mask; if GENTYPE and CHECKDIG are present they will be ignored; only DIGTYPES are considered
+    :return int max_int: the maximum number of noids
+    """
+    max_int = 1
+    for c in mask:
+        if c == 'e':
+            max_int *= len(XDIGIT)
+        elif c == 'd':
+            max_int *= len(DIGIT)
+    return max_int
 
 
 def calculate_check_digit(s):
