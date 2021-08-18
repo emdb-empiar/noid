@@ -7,11 +7,13 @@ GENTYPES = ['r', 's', 'z']
 DIGTYPES = ['d', 'e']
 CHECKDIG = ['k']
 SHORT = ''
+
+
 #
 # SHORT = '.shrt.'
 
 
-def _get_noid_range(mask):
+def get_noid_range(mask):
     """Given the specified mask compute the maximum number of noids availabl
 
     :param str mask: the mask; if GENTYPE and CHECKDIG are present they will be ignored; only DIGTYPES are considered
@@ -26,7 +28,7 @@ def _get_noid_range(mask):
     return max_int
 
 
-def _validate_mask(mask):
+def validate_mask(mask):
     """Check to make sure that we have a valid mask
 
     :param list mask: a sequence of characters
@@ -47,12 +49,19 @@ def _validate_mask(mask):
     return True
 
 
+def remove_prefix(template):
+    if '.' in template:
+        prefix, mask = template.rsplit('.', 1)
+        prefix += '.'
+    else:
+        mask = template
+        prefix = ''
+    return prefix, mask
+
+
 class InvalidTemplateError(Exception):
     pass
 
-
-class ValidationError(Exception):
-    pass
 
 
 class NamespaceError(Exception):

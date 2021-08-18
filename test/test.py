@@ -51,48 +51,57 @@ class PynoidAPI(unittest.TestCase):
 
 
 class PynoidUtils(unittest.TestCase):
-    def test__validate_mask(self):
+    def test_validate_mask(self):
         """Validate a mask"""
-        self.assertTrue(noid.utils._validate_mask('zek'))
-        self.assertTrue(noid.utils._validate_mask('ze'))
-        self.assertTrue(noid.utils._validate_mask('zdk'))
-        self.assertTrue(noid.utils._validate_mask('zd'))
-        self.assertTrue(noid.utils._validate_mask('zededededdeeddk'))
-        self.assertTrue(noid.utils._validate_mask('zededededdeedd'))
-        self.assertTrue(noid.utils._validate_mask('rek'))
-        self.assertTrue(noid.utils._validate_mask('re'))
-        self.assertTrue(noid.utils._validate_mask('rdk'))
-        self.assertTrue(noid.utils._validate_mask('rd'))
-        self.assertTrue(noid.utils._validate_mask('rededededdeeddk'))
-        self.assertTrue(noid.utils._validate_mask('rededededdeedd'))
-        self.assertTrue(noid.utils._validate_mask('sek'))
-        self.assertTrue(noid.utils._validate_mask('se'))
-        self.assertTrue(noid.utils._validate_mask('sdk'))
-        self.assertTrue(noid.utils._validate_mask('sd'))
-        self.assertTrue(noid.utils._validate_mask('sededededdeeddk'))
-        self.assertTrue(noid.utils._validate_mask('sededededdeedd'))
-        self.assertTrue(noid.utils._validate_mask('ek'))
-        self.assertTrue(noid.utils._validate_mask('e'))
-        self.assertTrue(noid.utils._validate_mask('dk'))
-        self.assertTrue(noid.utils._validate_mask('d'))
-        self.assertTrue(noid.utils._validate_mask('ededededdeeddk'))
-        self.assertTrue(noid.utils._validate_mask('ededededdeedd'))
-        self.assertFalse(noid.utils._validate_mask('a'))
-        self.assertFalse(noid.utils._validate_mask('aa'))
-        self.assertFalse(noid.utils._validate_mask('zeeedddl'))
-        self.assertFalse(noid.utils._validate_mask('zeeedtddl'))
-        self.assertFalse(noid.utils._validate_mask('zeeedtdd'))
-        self.assertFalse(noid.utils._validate_mask('adddeeew'))
+        self.assertTrue(utils.validate_mask('zek'))
+        self.assertTrue(utils.validate_mask('ze'))
+        self.assertTrue(utils.validate_mask('zdk'))
+        self.assertTrue(utils.validate_mask('zd'))
+        self.assertTrue(utils.validate_mask('zededededdeeddk'))
+        self.assertTrue(utils.validate_mask('zededededdeedd'))
+        self.assertTrue(utils.validate_mask('rek'))
+        self.assertTrue(utils.validate_mask('re'))
+        self.assertTrue(utils.validate_mask('rdk'))
+        self.assertTrue(utils.validate_mask('rd'))
+        self.assertTrue(utils.validate_mask('rededededdeeddk'))
+        self.assertTrue(utils.validate_mask('rededededdeedd'))
+        self.assertTrue(utils.validate_mask('sek'))
+        self.assertTrue(utils.validate_mask('se'))
+        self.assertTrue(utils.validate_mask('sdk'))
+        self.assertTrue(utils.validate_mask('sd'))
+        self.assertTrue(utils.validate_mask('sededededdeeddk'))
+        self.assertTrue(utils.validate_mask('sededededdeedd'))
+        self.assertTrue(utils.validate_mask('ek'))
+        self.assertTrue(utils.validate_mask('e'))
+        self.assertTrue(utils.validate_mask('dk'))
+        self.assertTrue(utils.validate_mask('d'))
+        self.assertTrue(utils.validate_mask('ededededdeeddk'))
+        self.assertTrue(utils.validate_mask('ededededdeedd'))
+        self.assertFalse(utils.validate_mask('a'))
+        self.assertFalse(utils.validate_mask('aa'))
+        self.assertFalse(utils.validate_mask('zeeedddl'))
+        self.assertFalse(utils.validate_mask('zeeedtddl'))
+        self.assertFalse(utils.validate_mask('zeeedtdd'))
+        self.assertFalse(utils.validate_mask('adddeeew'))
 
-    def test__get_noid_range(self):
+    def test_get_noid_range(self):
         """Get the max_size"""
-        xsize = len(noid.utils.XDIGIT)
-        dsize = len(noid.utils.DIGIT)
-        self.assertEqual(xsize ** 2 * dsize, noid.utils._get_noid_range('zedek'))
-        self.assertEqual(dsize ** 4, noid.utils._get_noid_range('zddddk'))
-        self.assertEqual(xsize ** 4, noid.utils._get_noid_range('zeeeek'))
-        self.assertEqual(xsize ** 3, noid.utils._get_noid_range('seee'))
-        self.assertEqual(dsize ** 2 * xsize ** 2, noid.utils._get_noid_range('rddee'))
+        xsize = len(utils.XDIGIT)
+        dsize = len(utils.DIGIT)
+        self.assertEqual(xsize ** 2 * dsize, utils.get_noid_range('zedek'))
+        self.assertEqual(dsize ** 4, utils.get_noid_range('zddddk'))
+        self.assertEqual(xsize ** 4, utils.get_noid_range('zeeeek'))
+        self.assertEqual(xsize ** 3, utils.get_noid_range('seee'))
+        self.assertEqual(dsize ** 2 * xsize ** 2, utils.get_noid_range('rddee'))
+
+    def test_remove_prefix(self):
+        """Remove the prefix"""
+        self.assertEqual(('something.', 'eedeede'), utils.remove_prefix('something.eedeede'))
+        self.assertEqual(('', 'eedeede'), utils.remove_prefix('eedeede'))
+        self.assertEqual(('something.', 'eedeedek'), utils.remove_prefix('something.eedeedek'))
+        self.assertEqual(('', 'eedeedek'), utils.remove_prefix('eedeedek'))
+        self.assertEqual(('something.', 'reddek'), utils.remove_prefix('something.reddek'))
+        self.assertEqual(('', 'reddek'), utils.remove_prefix('reddek'))
 
 
 class PynoidTests(unittest.TestCase):
@@ -131,20 +140,23 @@ class PynoidTests(unittest.TestCase):
         self.assertEqual(pynoid.mint('ze', len(utils.XDIGIT)), '10')
 
     def test_validate_valid(self):
-        valid = 'test31wqw0wsr'
-        valid_scheme = 'ark:/test31wqw0wsr'
+        """Given some valid noids check that they are valid"""
+        valid = 'test31wqw0ws9'
+        valid_scheme = 'ark:/test31wqw0ws9'
         self.assertTrue(pynoid.validate(valid))
         self.assertTrue(pynoid.validate(valid_scheme))
 
     def test_validate_invalid(self):
+        """Invalid noids with/out scheme"""
         invalid = 'test31qww0wsr'
-        invalidScheme = 'ark:/test31qww0wsr'
-        self.assertRaises(ValidationError, validate, invalid)
-        self.assertRaises(ValidationError, validate, invalidScheme)
+        invalid_scheme = 'ark:/test31qww0wsr'
+        self.assertFalse(pynoid.validate(invalid))
+        self.assertFalse(pynoid.validate(invalid_scheme))
 
     def test_checkdigit(self):
-        self.assertEqual(mint('eek', 100), '3f0')
-        self.assertRaises(ValidationError, validate, 'f30')
+        """The check digit is sensitive to permutations"""
+        self.assertEqual(pynoid.mint('eek', 100), '1MA')
+        self.assertFalse(pynoid.validate('M1A'))
 
 
 if __name__ == '__main__':

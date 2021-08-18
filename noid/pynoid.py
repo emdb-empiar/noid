@@ -2,8 +2,9 @@ import os
 import sys
 from random import randint
 
-from noid.utils import _get_noid_range, _validate_mask, DIGIT, XDIGIT, GENTYPES, SHORT, InvalidTemplateError, \
-    NamespaceError
+from noid import utils
+# import get_noid_range, validate_mask, DIGIT, XDIGIT, GENTYPES, SHORT, InvalidTemplateError, \
+#     NamespaceError
 
 
 
@@ -35,6 +36,7 @@ def mint(template='zek', n=None, scheme=None, naa=None):
     method. 'r' and 's' (typically meaning 'random' and 'sequential') are recognized as valid values, but ignored
     and must be implemented elsewhere.
     """
+    # todo: handle 'r' and 's'
     # determine the prefix and mask
     if '.' in template:
         prefix, mask = template.rsplit('.', 1)
@@ -43,19 +45,17 @@ def mint(template='zek', n=None, scheme=None, naa=None):
         prefix = ''
 
     # validate the mask
-    _validate_mask(mask)
+    validate_mask(mask)
 
     if n is None:
         if mask[0] in GENTYPES:
             mask = mask[1:]
         # If we hit this point, this is a random (and therefore, short-term) identifier. 
         prefix = SHORT + prefix
-        n = randint(0, _get_noid_range(mask) - 1)
+        n = randint(0, get_noid_range(mask) - 1)
 
-    if prefix:
-        noid = f"{prefix}.{generate_noid(n, mask)}"
-    else:
-        noid = generate_noid(n, mask)
+    noid = f"{prefix}{generate_noid(n, mask)}"
+
     if naa:
         noid = naa.strip('/') + '/' + noid
     if template[-1] == 'k':
@@ -65,8 +65,15 @@ def mint(template='zek', n=None, scheme=None, naa=None):
     return noid
 
 
-def mint_(args):
-    noid = generate_noid_(args)
+def mint_(args) -> str:
+    prefix, mask = utils.remove_prefix(template, args)
+    if not validate_mask(mask):
+        return ''
+    noid = generate_noid_(mask, args)
+    noid = utils.add_prefix(prefix, noid, args)
+    noid = utils.add_naa(noid, args)
+    noid = append_check_digit(noid, args)
+    noid = utils.add_scheme(noid, args)
     return noid
 
 
@@ -78,12 +85,53 @@ def generate_mask(args):
         mask = template
         prefix = ''
     # validate the mask
-    _validate_mask(mask)
+    validate_mask(mask)
     return prefix, mask
 
 
-def generate_noid_(args):
-    return noid
+def generate_noid_(mask, args):
+    if args.index is None:
+        if mask[0] in utils.GENTYPES:
+            mask = mask[1:]
+        n = randint(0, utils.get_noid_range(mask) - 1)
+    else:
+        n = args.index
+    length = n
+    noid = ''
+    # construct the noid starting from the right
+    # convert the numerical value 'n' to the digits specified in the mask
+    for char in mask[::-1]:
+        if char == 'e':
+            div = len(XDIGIT)
+        elif char == 'd':
+            div = len(DIGIT)
+        else:
+            continue
+        value = n % div
+        n = n // div
+        noid += (XDIGIT[value])
+    # if we have anytheng left over we continue using the leftmost mask character
+    # this should not happen with 'z'
+    if mask[0] == 'z':
+        char = mask[1]
+        while n > 0:
+            if char == 'e':
+                div = len(XDIGIT)
+            elif char == 'd':
+                div = len(DIGIT)
+            else:
+                raise utils.InvalidTemplateError("Template mask is corrupt. Cannot process character: " + char)
+            value = n % div
+            n = n // div
+            noid += (XDIGIT[value])
+
+    # if there is still something left over, we've exceeded our namespace.
+    # checks elsewhere should prevent this case from ever evaluating true.
+    if n > 0:
+        raise utils.NamespaceError("Cannot mint a noid for (counter = " + str(length) + ") within this namespace.")
+
+    # since we generated the noid from right to left we reverse it
+    return noid[::-1]
 
 
 def validate(s):
