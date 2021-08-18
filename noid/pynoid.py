@@ -66,14 +66,11 @@ def mint(template='zek', n=None, scheme=None, naa=None):
 
 
 def mint_(args) -> str:
-    prefix, mask = utils.remove_prefix(template, args)
-    if not validate_mask(mask):
+    prefix, mask = utils.remove_prefix(args.template)
+    if not utils.validate_mask(mask):
         return ''
-    noid = generate_noid_(mask, args)
-    noid = utils.add_prefix(prefix, noid, args)
-    noid = utils.add_naa(noid, args)
-    noid = append_check_digit(noid, args)
-    noid = utils.add_scheme(noid, args)
+    noid = f"{args.scheme}{args.naa}{prefix}{generate_noid_(mask, args)}"
+    noid = f"{noid}{calculate_check_digit(noid)}"
     return noid
 
 
@@ -102,28 +99,28 @@ def generate_noid_(mask, args):
     # convert the numerical value 'n' to the digits specified in the mask
     for char in mask[::-1]:
         if char == 'e':
-            div = len(XDIGIT)
+            div = len(utils.XDIGIT)
         elif char == 'd':
-            div = len(DIGIT)
+            div = len(utils.DIGIT)
         else:
             continue
         value = n % div
         n = n // div
-        noid += (XDIGIT[value])
+        noid += (utils.XDIGIT[value])
     # if we have anytheng left over we continue using the leftmost mask character
     # this should not happen with 'z'
     if mask[0] == 'z':
         char = mask[1]
         while n > 0:
             if char == 'e':
-                div = len(XDIGIT)
+                div = len(utils.XDIGIT)
             elif char == 'd':
-                div = len(DIGIT)
+                div = len(utils.DIGIT)
             else:
                 raise utils.InvalidTemplateError("Template mask is corrupt. Cannot process character: " + char)
             value = n % div
             n = n // div
-            noid += (XDIGIT[value])
+            noid += (utils.XDIGIT[value])
 
     # if there is still something left over, we've exceeded our namespace.
     # checks elsewhere should prevent this case from ever evaluating true.
@@ -199,16 +196,16 @@ def calculate_check_digit(noid):
     def index_of(x):
         """get the index of the extended digit"""
         try:
-            return XDIGIT.index(x)
+            return utils.XDIGIT.index(x)
         except:
             return 0
 
     total = list()
     for i, index in enumerate(map(index_of, noid)):
         total += [index * (i + 1)]
-    index = sum(total) % len(XDIGIT)
+    index = sum(total) % len(utils.XDIGIT)
     # index = sum([x * (i + 1) for i, x in enumerate(map(index_of, noid))]) % len(XDIGIT)
-    return XDIGIT[index]
+    return utils.XDIGIT[index]
 
 
 def main():

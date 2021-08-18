@@ -1,5 +1,5 @@
 import unittest
-
+import secrets
 from noid import cli, pynoid, utils
 
 """
@@ -48,6 +48,7 @@ class PynoidAPI(unittest.TestCase):
     def test_mint(self):
         args = cli.cli(f"noid")
         noid = pynoid.mint_(args)
+        print(f"noid: {noid}")
 
 
 class PynoidUtils(unittest.TestCase):
@@ -102,6 +103,12 @@ class PynoidUtils(unittest.TestCase):
         self.assertEqual(('', 'eedeedek'), utils.remove_prefix('eedeedek'))
         self.assertEqual(('something.', 'reddek'), utils.remove_prefix('something.reddek'))
         self.assertEqual(('', 'reddek'), utils.remove_prefix('reddek'))
+
+    def test_add_naa(self):
+        """Return the prefix"""
+
+        prefix, mask = utils.remove_prefix('something.eeddeede')
+        utils.add_prefix(prefix, noid)
 
 
 class PynoidTests(unittest.TestCase):
