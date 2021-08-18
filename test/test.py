@@ -1,6 +1,6 @@
 import unittest
 
-from noid import cli, pynoid
+from noid import cli, pynoid, utils
 
 """
 Behaviours:
@@ -53,81 +53,88 @@ class PynoidAPI(unittest.TestCase):
 class PynoidUtils(unittest.TestCase):
     def test__validate_mask(self):
         """Validate a mask"""
-        self.assertTrue(pynoid._validate_mask('zek'))
-        self.assertTrue(pynoid._validate_mask('ze'))
-        self.assertTrue(pynoid._validate_mask('zdk'))
-        self.assertTrue(pynoid._validate_mask('zd'))
-        self.assertTrue(pynoid._validate_mask('zededededdeeddk'))
-        self.assertTrue(pynoid._validate_mask('zededededdeedd'))
-        self.assertTrue(pynoid._validate_mask('rek'))
-        self.assertTrue(pynoid._validate_mask('re'))
-        self.assertTrue(pynoid._validate_mask('rdk'))
-        self.assertTrue(pynoid._validate_mask('rd'))
-        self.assertTrue(pynoid._validate_mask('rededededdeeddk'))
-        self.assertTrue(pynoid._validate_mask('rededededdeedd'))
-        self.assertTrue(pynoid._validate_mask('sek'))
-        self.assertTrue(pynoid._validate_mask('se'))
-        self.assertTrue(pynoid._validate_mask('sdk'))
-        self.assertTrue(pynoid._validate_mask('sd'))
-        self.assertTrue(pynoid._validate_mask('sededededdeeddk'))
-        self.assertTrue(pynoid._validate_mask('sededededdeedd'))
-        self.assertTrue(pynoid._validate_mask('ek'))
-        self.assertTrue(pynoid._validate_mask('e'))
-        self.assertTrue(pynoid._validate_mask('dk'))
-        self.assertTrue(pynoid._validate_mask('d'))
-        self.assertTrue(pynoid._validate_mask('ededededdeeddk'))
-        self.assertTrue(pynoid._validate_mask('ededededdeedd'))
-        self.assertFalse(pynoid._validate_mask('a'))
+        self.assertTrue(noid.utils._validate_mask('zek'))
+        self.assertTrue(noid.utils._validate_mask('ze'))
+        self.assertTrue(noid.utils._validate_mask('zdk'))
+        self.assertTrue(noid.utils._validate_mask('zd'))
+        self.assertTrue(noid.utils._validate_mask('zededededdeeddk'))
+        self.assertTrue(noid.utils._validate_mask('zededededdeedd'))
+        self.assertTrue(noid.utils._validate_mask('rek'))
+        self.assertTrue(noid.utils._validate_mask('re'))
+        self.assertTrue(noid.utils._validate_mask('rdk'))
+        self.assertTrue(noid.utils._validate_mask('rd'))
+        self.assertTrue(noid.utils._validate_mask('rededededdeeddk'))
+        self.assertTrue(noid.utils._validate_mask('rededededdeedd'))
+        self.assertTrue(noid.utils._validate_mask('sek'))
+        self.assertTrue(noid.utils._validate_mask('se'))
+        self.assertTrue(noid.utils._validate_mask('sdk'))
+        self.assertTrue(noid.utils._validate_mask('sd'))
+        self.assertTrue(noid.utils._validate_mask('sededededdeeddk'))
+        self.assertTrue(noid.utils._validate_mask('sededededdeedd'))
+        self.assertTrue(noid.utils._validate_mask('ek'))
+        self.assertTrue(noid.utils._validate_mask('e'))
+        self.assertTrue(noid.utils._validate_mask('dk'))
+        self.assertTrue(noid.utils._validate_mask('d'))
+        self.assertTrue(noid.utils._validate_mask('ededededdeeddk'))
+        self.assertTrue(noid.utils._validate_mask('ededededdeedd'))
+        self.assertFalse(noid.utils._validate_mask('a'))
+        self.assertFalse(noid.utils._validate_mask('aa'))
+        self.assertFalse(noid.utils._validate_mask('zeeedddl'))
+        self.assertFalse(noid.utils._validate_mask('zeeedtddl'))
+        self.assertFalse(noid.utils._validate_mask('zeeedtdd'))
+        self.assertFalse(noid.utils._validate_mask('adddeeew'))
 
     def test__get_noid_range(self):
         """Get the max_size"""
+        xsize = len(noid.utils.XDIGIT)
+        dsize = len(noid.utils.DIGIT)
+        self.assertEqual(xsize ** 2 * dsize, noid.utils._get_noid_range('zedek'))
+        self.assertEqual(dsize ** 4, noid.utils._get_noid_range('zddddk'))
+        self.assertEqual(xsize ** 4, noid.utils._get_noid_range('zeeeek'))
+        self.assertEqual(xsize ** 3, noid.utils._get_noid_range('seee'))
+        self.assertEqual(dsize ** 2 * xsize ** 2, noid.utils._get_noid_range('rddee'))
 
-        print(pynoid._get_noid_range('zedek'))
-        print(pynoid._get_noid_range('zdk'))
 
 class PynoidTests(unittest.TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_naa_append(self):
-        noid = mint(naa='abc')
+        noid = pynoid.mint(naa='abc')
         self.assertTrue(noid.startswith('abc/'))
 
     def test_scheme_append(self):
         schemes = ['doi:', 'ark:/', 'http://']
         for scheme in schemes:
-            noid = mint(scheme=scheme)
+            noid = pynoid.mint(scheme=scheme)
             self.assertTrue(noid.startswith(scheme))
 
     def test_mint_short_term(self):
-        noid = mint()
-        self.assertTrue(noid.startswith(SHORT))
+        noid = pynoid.mint()
+        self.assertTrue(noid.startswith(utils.SHORT))
 
     def test_mint_ns(self):
-        ns = range(10)
+        """Over the range of each digit-space the index produces the respective digit"""
+        ns = range(len(utils.DIGIT))
         for n in ns:
-            self.assertEqual(mint('d', n), DIGIT[n])
-        ns = range(29)
+            self.assertEqual(pynoid.mint('d', n), utils.DIGIT[n])
+        ns = range(len(utils.XDIGIT))
         for n in ns:
-            self.assertEqual(mint('e', n), XDIGIT[n])
+            self.assertEqual(pynoid.mint('e', n), utils.XDIGIT[n])
 
     def test_namespace_overflow(self):
-        self.assertRaises(pynoid.NamespaceError, pynoid.mint, template='d', n=10)
-        self.assertRaises(pynoid.NamespaceError, pynoid.mint, template='e', n=29)
+        """Overflow occurs when we require a value outside of the range of the template"""
+        self.assertRaises(utils.NamespaceError, pynoid.mint, template='d', n=len(utils.DIGIT) + 1)
+        self.assertRaises(utils.NamespaceError, pynoid.mint, template='e', n=len(utils.XDIGIT) + 1)
 
     def test_mint_z_rollover(self):
-        self.assertEqual(mint('zd', 10), '10')
-        self.assertEqual(mint('ze', 29), '10')
+        """Rollover happens when we exhaust the character space"""
+        self.assertEqual(pynoid.mint('zd', len(utils.DIGIT)), '10')
+        self.assertEqual(pynoid.mint('ze', len(utils.XDIGIT)), '10')
 
     def test_validate_valid(self):
         valid = 'test31wqw0wsr'
-        validScheme = 'ark:/test31wqw0wsr'
-        self.assertTrue(validate(valid))
-        self.assertTrue(validate(validScheme))
+        valid_scheme = 'ark:/test31wqw0wsr'
+        self.assertTrue(pynoid.validate(valid))
+        self.assertTrue(pynoid.validate(valid_scheme))
 
     def test_validate_invalid(self):
         invalid = 'test31qww0wsr'

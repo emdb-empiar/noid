@@ -2,17 +2,10 @@ import os
 import sys
 from random import randint
 
-DIGIT = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']  # 10
-#
-XDIGIT = DIGIT + ['a', 'b', 'c', 'd', 'f', 'g', 'h', 'i', 'j', 'k', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'v', 'w',
-                  'x', 'y', 'z'] + \
-         ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y',
-          'Z']
-GENTYPES = ['r', 's', 'z']
-DIGTYPES = ['d', 'e']
-CHECKDIG = ['k']
-# SHORT = '.shrt.'
-SHORT = ''
+from noid.utils import _get_noid_range, _validate_mask, DIGIT, XDIGIT, GENTYPES, SHORT, InvalidTemplateError, \
+    NamespaceError
+
+
 
 
 def mint(template='zek', n=None, scheme=None, naa=None):
@@ -41,13 +34,6 @@ def mint(template='zek', n=None, scheme=None, naa=None):
     any 'n' value (eg. 'de' becomes 'dde' then 'ddde' as numbers get larger). That expansion can be handled by this
     method. 'r' and 's' (typically meaning 'random' and 'sequential') are recognized as valid values, but ignored
     and must be implemented elsewhere.
-    """
-
-    """
-    Paul's notes:
-    - the template has two parts: prefix and mask separated by a period (.)
-    - mask[0] may be one of r, s, z
-    - adding k at the end of the template means a checkdigit should be included
     """
     # determine the prefix and mask
     if '.' in template:
@@ -149,52 +135,16 @@ def generate_noid(n, mask):
     return noid[::-1]
 
 
-def _validate_mask(mask):
-    """Check to make sure that we have a valid mask
+def calculate_check_digit(noid):
+    """Given a noid determine the check digit to be appended from the alphabet
 
-    :param list mask: a sequence of characters
-    :return bool: whether or not the mask is valid
+    :param str noid: a valid noid string
     """
-    # check the first character
-    if not (mask[0] in GENTYPES or mask[0] in DIGTYPES):
-        return False
-        # raise InvalidTemplateError("Template is invalid.")
-    # check the last character
-    elif not (mask[-1] in CHECKDIG or mask[-1] in DIGTYPES):
-        return False
-        # raise InvalidTemplateError("Template is invalid.")
-    # check all other characters
-    else:
-        for maskchar in mask[1:-1]:
-            if not (maskchar in DIGTYPES):
-                return False
-                # raise InvalidTemplateError("Template is invalid.")
-
-    return True
-
-
-def _get_noid_range(mask):
-    """Given the specified mask compute the maximum number of noids availabl
-
-    :param str mask: the mask; if GENTYPE and CHECKDIG are present they will be ignored; only DIGTYPES are considered
-    :return int max_int: the maximum number of noids
-    """
-    max_int = 1
-    for c in mask:
-        if c == 'e':
-            max_int *= len(XDIGIT)
-        elif c == 'd':
-            max_int *= len(DIGIT)
-    return max_int
-
-
-def calculate_check_digit(s):
-    """Given a string determine the check digit to be appended from the alphabet"""
     # TODO: Fix checkdigit to autostrip scheme names shorter or longer than 3 chars.
     try:
         # if we have 'ark:/' remove them
-        if s[3] == ':':
-            s = s[4:].lstrip('/')
+        if noid[3] == ':':
+            noid = noid[4:].lstrip('/')
     except IndexError:
         pass
 
@@ -206,22 +156,11 @@ def calculate_check_digit(s):
             return 0
 
     total = list()
-    for i, x in enumerate(map(index_of, s)):
-        total += [x * (i + 1)]
-    index = sum([x * (i + 1) for i, x in enumerate(map(index_of, s))]) % len(XDIGIT)
+    for i, index in enumerate(map(index_of, noid)):
+        total += [index * (i + 1)]
+    index = sum(total) % len(XDIGIT)
+    # index = sum([x * (i + 1) for i, x in enumerate(map(index_of, noid))]) % len(XDIGIT)
     return XDIGIT[index]
-
-
-class InvalidTemplateError(Exception):
-    pass
-
-
-class ValidationError(Exception):
-    pass
-
-
-class NamespaceError(Exception):
-    pass
 
 
 def main():
