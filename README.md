@@ -2,6 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/noid.svg)](https://badge.fury.io/py/noid)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/noid)
+![example workflow](https://github.com/paulkorir/noid/actions/workflows/python-package.yml/badge.svg)
+[![codecov](https://codecov.io/gh/paulkorir/noid/branch/master/graph/badge.svg?token=OTVWS6LNU2)](https://codecov.io/gh/paulkorir/noid)
 
 ## Installation
 Install from PyPI with
