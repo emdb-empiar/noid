@@ -1,4 +1,4 @@
-#`noid` Python Package
+# `noid` Python Package
 
 ## Installation
 Install from PyPI with
@@ -12,7 +12,7 @@ pip install git+https://github.com/paulkorir/noid.git # HTTPS
 ```
 
 ## CLI Usage
-###Generating a noid
+### Generating a noid
 Use the `noid` command with no arguments:
 ```
 noid
@@ -43,32 +43,32 @@ optional arguments:
 
 ```
 
-###Validating a noid
+### Validating a noid
 Validate a noid using the `-v/--validate` flag and pass a noid.
 ```shell
 noid -v $(noid) # self-validation
 ```
 
-###Options
-####Specify the NAA
+### Options
+#### Specify the NAA
 Use the `-N/--naa` option.
 ```shell
 noid --naa 1234
 ```
 
-####Specify the scheme
+#### Specify the scheme
 Use the `-s/--scheme` option.
 ```shell
 noid --scheme darpa::
 ```
 
-####Specify a template
+#### Specify a template
 Use the `-t/--template` option.
 ```shell
 noid -t zeeddeedeedk
 ```
 
-####Compute a noid for a value
+#### Compute a noid for a value
 
 ## API Usage
 You can also use this package's API in your code.
