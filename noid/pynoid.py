@@ -2,15 +2,18 @@ import os
 import sys
 from random import randint
 
-from noid import utils
-# import get_noid_range, validate_mask, DIGIT, XDIGIT, GENTYPES, SHORT, InvalidTemplateError, \
-#     NamespaceError
+from noid import utils, cli
 
 
-
-
-def mint(template='zek', n=None, scheme=None, naa=None):
+def mint(template='zek', n=-1, scheme='', naa='') -> str:
     """ Mint identifiers according to template with a prefix of scheme + naa.
+
+    :param str template: a string consisting of GENTYPE + (DIGTYPE)+ [+ CHECKDIGIT]
+    :param int n: a number to convert to a noid; default is -1 meaning create from random number
+    :param str scheme: a scheme e.g. 'ark:/', 'doi:', 'http://', 'https://' etc.
+    :param str naa: name assigning authority (number); can also be a string
+    :return noid: a valid noid with/out check digit or the empty string (failure)
+    :rtype str
 
     Template is of form [mask] or [prefix].[mask] where prefix is any URI-safe string and mask is a string of any
     combination 'e' and 'd', optionally beginning with a mint order indicator ('r'|'s'|'z') and/or ending
@@ -37,62 +40,22 @@ def mint(template='zek', n=None, scheme=None, naa=None):
     and must be implemented elsewhere.
     """
     # todo: handle 'r' and 's'
-    # determine the prefix and mask
-    if '.' in template:
-        prefix, mask = template.rsplit('.', 1)
-    else:
-        mask = template
-        prefix = ''
-
-    # validate the mask
-    validate_mask(mask)
-
-    if n is None:
-        if mask[0] in GENTYPES:
-            mask = mask[1:]
-        # If we hit this point, this is a random (and therefore, short-term) identifier. 
-        prefix = SHORT + prefix
-        n = randint(0, get_noid_range(mask) - 1)
-
-    noid = f"{prefix}{generate_noid(n, mask)}"
-
-    if naa:
-        noid = naa.strip('/') + '/' + noid
-    if template[-1] == 'k':
-        noid += calculate_check_digit(noid)
-    if scheme:
-        noid = scheme + noid
-    return noid
-
-
-def mint_(args) -> str:
-    prefix, mask = utils.remove_prefix(args.template)
+    prefix, mask = utils.remove_prefix(template)
     if not utils.validate_mask(mask):
         return ''
-    noid = f"{args.scheme}{args.naa}{prefix}{generate_noid_(mask, args)}"
-    noid = f"{noid}{calculate_check_digit(noid)}"
+    if naa:
+        naa += '/'
+    noid = f"{scheme}{naa}{prefix}{generate_noid_(mask, n)}"
+    if mask[-1] in utils.CHECKDIG:
+        noid = f"{noid}{calculate_check_digit(noid)}"
     return noid
 
 
-def generate_mask(args):
-    # determine the prefix and mask
-    if '.' in template:
-        prefix, mask = template.rsplit('.', 1)
-    else:
-        mask = template
-        prefix = ''
-    # validate the mask
-    validate_mask(mask)
-    return prefix, mask
-
-
-def generate_noid_(mask, args):
-    if args.index is None:
+def generate_noid_(mask, n):
+    if n < 0:
         if mask[0] in utils.GENTYPES:
             mask = mask[1:]
         n = randint(0, utils.get_noid_range(mask) - 1)
-    else:
-        n = args.index
     length = n
     noid = ''
     # construct the noid starting from the right
@@ -131,59 +94,24 @@ def generate_noid_(mask, args):
     return noid[::-1]
 
 
-def validate(s):
+def validate(noid: str) -> bool:
     """Checks if the final character is a valid checkdigit for the id. Will fail for ids with no checkdigit.
 
-    This will also attempt to strip scheme strings (eg. 'doi:', 'ark:/') from the beginning of the string. This feature is limited, however, so if you haven't tested with your particular namespace, it's best to pass in ids with that data removed.
+    This will also attempt to strip scheme strings (eg. 'doi:', 'ark:/') from the beginning of the string.
+    This feature is limited, however, so if you haven't tested with your particular namespace,
+    it's best to pass in ids with that data removed.
 
-    Returns True on success, ValidationError on failure.
+    :param str noid: a noid to validate
+    :rtype bool: whether or not the noid is valid
     """
-    return calculate_check_digit(s[0:-1]) == s[-1]
+    return calculate_check_digit(noid[0:-1]) == noid[-1]
 
 
-def generate_noid(n, mask):
-    """Generate the actual noid
-
-    :param int n:
-    """
-    length = n
-    noid = ''
-    for char in mask[::-1]:
-        if char == 'e':
-            div = len(XDIGIT)
-        elif char == 'd':
-            div = len(DIGIT)
-        else:
-            continue
-        value = n % div
-        n = n // div
-        noid += (XDIGIT[value])
-
-    if mask[0] == 'z':
-        char = mask[1]
-        while n > 0:
-            if char == 'e':
-                div = len(XDIGIT)
-            elif char == 'd':
-                div = len(DIGIT)
-            else:
-                raise InvalidTemplateError("Template mask is corrupt. Cannot process character: " + char)
-            value = n % div
-            n = n // div
-            noid += (XDIGIT[value])
-
-    # if there is still something left over, we've exceeded our namespace. 
-    # checks elsewhere should prevent this case from ever evaluating true.
-    if n > 0:
-        raise NamespaceError("Cannot mint a noid for (counter = " + str(length) + ") within this namespace.")
-
-    return noid[::-1]
-
-
-def calculate_check_digit(noid):
+def calculate_check_digit(noid: str) -> str:
     """Given a noid determine the check digit to be appended from the alphabet
 
     :param str noid: a valid noid string
+    :return str: a single character that is a check digit for the noid
     """
     # TODO: Fix checkdigit to autostrip scheme names shorter or longer than 3 chars.
     try:
@@ -204,12 +132,23 @@ def calculate_check_digit(noid):
     for i, index in enumerate(map(index_of, noid)):
         total += [index * (i + 1)]
     index = sum(total) % len(utils.XDIGIT)
-    # index = sum([x * (i + 1) for i, x in enumerate(map(index_of, noid))]) % len(XDIGIT)
     return utils.XDIGIT[index]
 
 
 def main():
-    print(mint(template='eeddeede', n=None, scheme='ark:/', naa='53696'))
+    args = cli.parse_args()
+    if args is None:
+        return os.EX_USAGE
+    if args.validate:
+        if args.verbose:
+            print(f"info: validating '{args.noid}'...", file=sys.stderr)
+        print(f"'{args.noid}' valid? {validate(args.noid)}")
+    else:
+        if args.verbose:
+            print(f"info: generating noid using template={args.template}, n={args.index}, "
+                  f"scheme={args.scheme}, naa={args.naa}...", file=sys.stderr)
+        noid = mint(args.template, args.index, scheme=args.scheme, naa=args.naa)
+        print(noid)
     return os.EX_OK
 
 

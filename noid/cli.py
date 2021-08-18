@@ -3,7 +3,7 @@ import shlex
 import sys
 from configparser import ConfigParser, ExtendedInterpolation
 
-DEFAULT_NAA = 0
+DEFAULT_NAA = ''
 DEFAULT_SCHEME = 'ark:/'
 DEFAULT_TEMPLATE = 'zeeddk'
 
@@ -36,7 +36,6 @@ parser.add_argument(
 parser.add_argument(
     '-N', '--naa',
     default=DEFAULT_NAA,
-    type=int,
     help=f"the name assigning authority (NAA) number [default: {DEFAULT_NAA}]"
 )
 parser.add_argument(
@@ -47,6 +46,7 @@ parser.add_argument(
 parser.add_argument(
     '-n', '--index',
     type=int,
+    default=-1,
     help="a number for which to generate a valid noid [default: random positive integer]"
 )
 parser.add_argument(
@@ -82,11 +82,15 @@ def read_configs(args):
 def parse_args():
     """Parse CLI args"""
     args = parser.parse_args()
-    if args.verbose:
-        print(f"using configs: {args.config_file}", file=sys.stderr)
     # attach configs to the args namespace
     if args.config_file:
+        if args.verbose:
+            print(f"using configs: {args.config_file}", file=sys.stderr)
         args._configs = read_configs(args)
+    # argument validation
+    if args.validate and args.noid is None:
+        print(f"error: missing noid to validate", file=sys.stderr)
+        return None
     return args
 
 

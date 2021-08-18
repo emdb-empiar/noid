@@ -1,5 +1,6 @@
+import random
 import unittest
-import secrets
+
 from noid import cli, pynoid, utils
 
 """
@@ -40,15 +41,61 @@ class PynoidCLI(unittest.TestCase):
         self.assertEqual(args.scheme, cli.DEFAULT_SCHEME)
         self.assertEqual(args.naa, cli.DEFAULT_NAA)
         self.assertEqual(args.template, cli.DEFAULT_TEMPLATE)
-        self.assertIsNone(args.index)
+        self.assertEqual(-1, args.index)
         self.assertFalse(args.verbose)
+
+    def test_validate(self):
+        """Validation requires noid positional argument"""
+        self.assertIsNone(cli.cli(f"noid -v"))
 
 
 class PynoidAPI(unittest.TestCase):
     def test_mint(self):
+        """Default use"""
         args = cli.cli(f"noid")
-        noid = pynoid.mint_(args)
-        print(f"noid: {noid}")
+        noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertRegex(noid, r"^ark[:][/][\w\d]+")
+
+    def test_mint_index(self):
+        """Create from an index"""
+        index = random.randint(0, 1000)
+        args = cli.cli(f"noid -n {index}")
+        noid1 = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        noid2 = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertEqual(noid1, noid2)
+
+    def test_mint_scheme(self):
+        """Set the scheme"""
+        args = cli.cli(f"noid --scheme doi:")
+        noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertRegex(noid, r"^doi[:][\w\d]+")
+
+    def test_mint_template_with_prefix(self):
+        """Template can have one or more prefixes"""
+        args = cli.cli(f"noid --template empiar.dddddk")
+        noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertRegex(noid, r".*empiar\.[\w\d]+")
+
+    def test_mint_with_naa(self):
+        """Include naa"""
+        naa = random.randint(9999, 99999)
+        args = cli.cli(f"noid --naa {naa}")
+        noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertRegex(noid, rf"^ark[:][/]{naa}[/][\w\d]+")
+
+    def test_mint_combined(self):
+        """All options at once"""
+        naa = random.randint(9999, 99999)
+        index = random.randint(9999, 99999)
+        args = cli.cli(f"noid --scheme https:// --naa {naa} --index {index} --template zeeeeek")
+        noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertRegex(noid, rf"^https[:][/]{{2}}{naa}[/][\w\d]+")
+
+    def test_mint_invalid_template(self):
+        """Invalid template should return blank noid"""
+        args = cli.cli(f"noid --template abcdefg")
+        noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
+        self.assertEqual('', noid)
 
 
 class PynoidUtils(unittest.TestCase):
@@ -104,12 +151,6 @@ class PynoidUtils(unittest.TestCase):
         self.assertEqual(('something.', 'reddek'), utils.remove_prefix('something.reddek'))
         self.assertEqual(('', 'reddek'), utils.remove_prefix('reddek'))
 
-    def test_add_naa(self):
-        """Return the prefix"""
-
-        prefix, mask = utils.remove_prefix('something.eeddeede')
-        utils.add_prefix(prefix, noid)
-
 
 class PynoidTests(unittest.TestCase):
 
@@ -131,7 +172,7 @@ class PynoidTests(unittest.TestCase):
         """Over the range of each digit-space the index produces the respective digit"""
         ns = range(len(utils.DIGIT))
         for n in ns:
-            self.assertEqual(pynoid.mint('d', n), utils.DIGIT[n])
+            self.assertEqual(utils.DIGIT[n], pynoid.mint('d', n))
         ns = range(len(utils.XDIGIT))
         for n in ns:
             self.assertEqual(pynoid.mint('e', n), utils.XDIGIT[n])
@@ -162,7 +203,7 @@ class PynoidTests(unittest.TestCase):
 
     def test_checkdigit(self):
         """The check digit is sensitive to permutations"""
-        self.assertEqual(pynoid.mint('eek', 100), '1MA')
+        self.assertEqual('1MA', pynoid.mint('eek', 100))
         self.assertFalse(pynoid.validate('M1A'))
 
 
