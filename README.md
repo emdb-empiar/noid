@@ -74,6 +74,10 @@ noid -t zeeddeedeedk
 ```
 
 #### Compute a noid for a value
+Use the `-n/--index` option.
+```shell
+noid -n 42
+```
 
 ## API Usage
 You can also use this package's API in your code.

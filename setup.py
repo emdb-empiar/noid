@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="noid",
-    version="1.0.0.a1",
+    version="1.0.0.a3",
     author="Paul K. Korir",
     author_email="pkorir@ebi.ac.uk, paulkorir@gmail.com",
     description="Mint NOIDs using a CLI or API",
