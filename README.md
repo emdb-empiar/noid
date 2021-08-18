@@ -11,7 +11,7 @@ pip install git+git@github.com:paulkorir/noid.git     # SSH
 pip install git+https://github.com/paulkorir/noid.git # HTTPS
 ```
 
-## Usage
+## CLI Usage
 ###Generating a noid
 Use the `noid` command with no arguments:
 ```
@@ -69,6 +69,29 @@ noid -t zeeddeedeedk
 ```
 
 ####Compute a noid for a value
+
+## API Usage
+You can also use this package's API in your code.
+```python
+import random
+
+from noid import mint, validate, calculate_check_digit, generate_noid
+
+# with default arguments
+noid = mint()
+
+# arguments: template, n, scheme, naa
+noid = mint(template='zeedeeedk', n=37, scheme='https://', naa='802938')
+
+# validating a noid
+validate(noid) # True/False
+
+# calculate the check digit
+calculate_check_digit(noid)
+
+# low-level generate a noid from a mask and number; no check digit is appended
+noid = generate_noid('eeddeed', random.randint(100, 1000))
+```
 
 ## Testing
 ```

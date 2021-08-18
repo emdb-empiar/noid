@@ -189,8 +189,8 @@ class PynoidTests(unittest.TestCase):
 
     def test_validate_valid(self):
         """Given some valid noids check that they are valid"""
-        valid = 'test31wqw0ws9'
-        valid_scheme = 'ark:/test31wqw0ws9'
+        valid = 'test31wqw0ws8'
+        valid_scheme = 'ark:/test31wqw0ws8'
         self.assertTrue(pynoid.validate(valid))
         self.assertTrue(pynoid.validate(valid_scheme))
 
@@ -203,8 +203,8 @@ class PynoidTests(unittest.TestCase):
 
     def test_checkdigit(self):
         """The check digit is sensitive to permutations"""
-        self.assertEqual('1MA', pynoid.mint('eek', 100))
-        self.assertFalse(pynoid.validate('M1A'))
+        self.assertEqual('1Kw', pynoid.mint('eek', 100))
+        self.assertFalse(pynoid.validate('K1w'))
 
 
 if __name__ == '__main__':
