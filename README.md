@@ -1,5 +1,8 @@
 # `noid` Python Package
 
+[![PyPI version](https://badge.fury.io/py/noid.svg)](https://badge.fury.io/py/noid)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/noid)
+
 ## Installation
 Install from PyPI with
 ```
