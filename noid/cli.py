@@ -89,7 +89,7 @@ def parse_args():
         args._configs = read_configs(args)
     # argument validation
     if args.validate and args.noid is None:
-        print(f"error: missing noid to validate", file=sys.stderr)
+        print("error: missing noid to validate", file=sys.stderr)
         return None
     return args
 

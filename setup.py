@@ -6,13 +6,13 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="noid",
     version="1.0.0.a1",
-    author="Yinlin Chen, Tingting Jiang, Lee Hunter, Jim Tuttle, Paul K. Korir",
-    author_email="ylchen@vt.edu, virjtt03@vt.edu, whunter@vt.edu, jjt@vt.edu, paulkorir@gmail.com",
-    description="Mint NOID",
+    author="Paul K. Korir",
+    author_email="pkorir@ebi.ac.uk, paulkorir@gmail.com",
+    description="Mint NOIDs using a CLI or API",
     license="MIT",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/vt-digital-libraries-platform/NOID-mint",
+    url="https://github.com/paulkorir/noid",
     packages=setuptools.find_packages(),
     entry_points={
         'console_scripts': [

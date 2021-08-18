@@ -50,6 +50,14 @@ def validate_mask(mask):
 
 
 def remove_prefix(template):
+    """Split the template into the prefix and mask
+
+    :param str template: a template string
+    :return: the prefix
+    :rtype str:
+    :return: the mask
+    :rtype str:
+    """
     if '.' in template:
         prefix, mask = template.rsplit('.', 1)
         prefix += '.'
@@ -57,12 +65,3 @@ def remove_prefix(template):
         mask = template
         prefix = ''
     return prefix, mask
-
-
-class InvalidTemplateError(Exception):
-    pass
-
-
-
-class NamespaceError(Exception):
-    pass

@@ -45,13 +45,19 @@ def mint(template='zek', n=-1, scheme='', naa='') -> str:
         return ''
     if naa:
         naa += '/'
-    noid = f"{scheme}{naa}{prefix}{generate_noid_(mask, n)}"
+    noid = f"{scheme}{naa}{prefix}{generate_noid(mask, n)}"
     if mask[-1] in utils.CHECKDIG:
         noid = f"{noid}{calculate_check_digit(noid)}"
     return noid
 
 
-def generate_noid_(mask, n):
+def generate_noid(mask:str, n:int) -> str:
+    """The actual noid generation
+
+    :param str mask: the mask string
+    :param int n: the number to use (default: -1, random number)
+    :return str: the noid or an empty string
+    """
     if n < 0:
         if mask[0] in utils.GENTYPES:
             mask = mask[1:]
@@ -80,7 +86,8 @@ def generate_noid_(mask, n):
             elif char == 'd':
                 div = len(utils.DIGIT)
             else:
-                raise utils.InvalidTemplateError("Template mask is corrupt. Cannot process character: " + char)
+                print(f"error: template mask is corrupt; cannot process character: {char}", file=sys.stderr)
+                return ''
             value = n % div
             n = n // div
             noid += (utils.XDIGIT[value])
@@ -88,8 +95,8 @@ def generate_noid_(mask, n):
     # if there is still something left over, we've exceeded our namespace.
     # checks elsewhere should prevent this case from ever evaluating true.
     if n > 0:
-        raise utils.NamespaceError("Cannot mint a noid for (counter = " + str(length) + ") within this namespace.")
-
+        print(f"error: cannot mint a noid for (counter = {length}) within this namespace.", file=sys.stderr)
+        return ''
     # since we generated the noid from right to left we reverse it
     return noid[::-1]
 
@@ -136,6 +143,7 @@ def calculate_check_digit(noid: str) -> str:
 
 
 def main():
+    """Main entry point"""
     args = cli.parse_args()
     if args is None:
         return os.EX_USAGE

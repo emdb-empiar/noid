@@ -179,8 +179,8 @@ class PynoidTests(unittest.TestCase):
 
     def test_namespace_overflow(self):
         """Overflow occurs when we require a value outside of the range of the template"""
-        self.assertRaises(utils.NamespaceError, pynoid.mint, template='d', n=len(utils.DIGIT) + 1)
-        self.assertRaises(utils.NamespaceError, pynoid.mint, template='e', n=len(utils.XDIGIT) + 1)
+        self.assertEqual('', pynoid.mint(template='d', n=len(utils.DIGIT) + 1))
+        self.assertEqual('', pynoid.mint(template='e', n=len(utils.XDIGIT) + 1))
 
     def test_mint_z_rollover(self):
         """Rollover happens when we exhaust the character space"""
