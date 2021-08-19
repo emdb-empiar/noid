@@ -79,6 +79,21 @@ Use the `-n/--index` option.
 noid -n 42
 ```
 
+#### Using a config file
+A simple config file can be defined with the following structure:
+```ini
+# path/to/noid.cnf
+[noid]
+# start with 'z'; follow with as many 'e' or 'd' as needed; terminate with 'k' for a checkdigit 
+template = zeededdek 
+scheme = ark:/
+naa = 92729
+# the above configs will produce noids like so: ark:/92729/fn7Z344v
+```
+then use it as follows:
+```shell
+noid -c path/to/noid.cnf
+```
 ## API Usage
 You can also use this package's API in your code.
 ```python

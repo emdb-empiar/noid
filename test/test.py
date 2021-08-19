@@ -1,13 +1,10 @@
-import random
-import unittest
-
-from noid import cli, pynoid, utils
-
 """
-Behaviours:
+noid
+====
+Desired behaviours:
 
 # generates a noid using arg defaults
-noid    
+noid
 
 # generates a noid according to config
 noid -c path/to/conf/file
@@ -15,7 +12,7 @@ noid -c path/to/conf/file
 # validate a noid
 noid -v/--validate <noid>
 # validating: <noid>
-# valid/invalid 
+# valid/invalid
 
 # overwrite scheme
 noid -s/--scheme "doi:/"
@@ -30,6 +27,16 @@ noid -t/--template zeek
 noid -n/--index
 
 """
+import random
+import re
+import unittest
+
+from noid import cli, pynoid, utils
+
+import pathlib
+
+BASE_DIR = pathlib.Path(__file__).parent.parent
+CONFIG_FILE = BASE_DIR / 'noid' / 'noid.cfg'
 
 
 class PynoidCLI(unittest.TestCase):
@@ -47,6 +54,18 @@ class PynoidCLI(unittest.TestCase):
     def test_validate(self):
         """Validation requires noid positional argument"""
         self.assertIsNone(cli.cli(f"noid -v"))
+
+    def test_config(self):
+        """Using a config file"""
+        args = cli.cli(f"noid -c {CONFIG_FILE}")
+        self.assertIsNone(args.noid)
+        self.assertEqual(str(CONFIG_FILE), args.config_file)
+        self.assertFalse(args.validate)
+        self.assertEqual('http://', args.scheme)
+        self.assertEqual('83812', args.naa)
+        self.assertEqual('zeeeeddddk', args.template)
+        self.assertEqual(-1, args.index)
+        self.assertFalse(args.verbose)
 
 
 class PynoidAPI(unittest.TestCase):
@@ -66,9 +85,17 @@ class PynoidAPI(unittest.TestCase):
 
     def test_mint_scheme(self):
         """Set the scheme"""
-        args = cli.cli(f"noid --scheme doi:")
+        index = random.randint(1000, 9000)
+        args = cli.cli(f"noid --scheme doi: --index {index}")
         noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
         self.assertRegex(noid, r"^doi[:][\w\d]+")
+        # the scheme should not affect the noid
+        args2 = cli.cli(f"noid --index {index}")
+        noid2 = pynoid.mint(template=args2.template, n=args2.index, scheme=args2.scheme, naa=args2.naa)
+        # use regex to extract noids
+        _noid = re.match(r"doi[:](?P<noid>[\w]+)", noid).group('noid')
+        _noid2 = re.match(r"ark[:][/](?P<noid>[\w]+)", noid2).group('noid')
+        self.assertEqual(_noid, _noid2)
 
     def test_mint_template_with_prefix(self):
         """Template can have one or more prefixes"""

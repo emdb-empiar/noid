@@ -86,7 +86,18 @@ def parse_args():
     if args.config_file:
         if args.verbose:
             print(f"using configs: {args.config_file}", file=sys.stderr)
-        args._configs = read_configs(args)
+        configs = read_configs(args)
+        _options = ['template', 'scheme', 'naa']
+        if 'noid' in configs.sections():
+            # overwrite using whatever is available
+            for o in _options:
+                if o in configs['noid']:
+                    setattr(args, o, configs.get('noid', o))
+                else:
+                    print(f"warning: configs missing option '{o}'; using default value ({getattr(args, o)})", file=sys.stderr)
+        else:
+            print(f"warning: config file '{args.config_file}' lacks 'noid' section; ignoring config file",
+                  file=sys.stderr)
     # argument validation
     if args.validate and args.noid is None:
         print("error: missing noid to validate", file=sys.stderr)

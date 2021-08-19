@@ -45,9 +45,10 @@ def mint(template='zek', n=-1, scheme='', naa='') -> str:
         return ''
     if naa:
         naa += '/'
-    noid = f"{scheme}{naa}{prefix}{generate_noid(mask, n)}"
+    _noid = generate_noid(mask, n)
+    noid = f"{scheme}{naa}{prefix}{_noid}"
     if mask[-1] in utils.CHECKDIG:
-        noid = f"{noid}{calculate_check_digit(noid)}"
+        noid = f"{noid}{calculate_check_digit(_noid)}"
     return noid
 
 
