@@ -109,8 +109,8 @@ tox
 ```
 
 ## Authors
-* Paul K. Korir - EMBL-EBI (current implementation)
-    * [Paul Korir](https://github.com/paulkorir)
+* Current implementation:
+    * [Paul K. Korir](https://github.com/paulkorir)
 * Original source code was by:
     * [Yinlin Chen](https://github.com/yinlinchen)
     * [Tingting Jiang](https://github.com/tingtingjh)
@@ -121,3 +121,12 @@ See also the list of [contributors](https://github.com/paulkorir/noid/graphs/con
 
 ## Thanks
 This tool was heavily influenced from [noid-mint](https://github.com/vt-digital-libraries-platform/NOID-mint)
+
+## References
+* https://confluence.ucop.edu/display/Curation/NOID
+* https://metacpan.org/dist/Noid/view/noid
+* https://en.wikipedia.org/wiki/Archival_Resource_Key
+* https://www.gs1.org/standards/id-keys/global-model-number-gmn
+* https://www.gs1.org/sites/default/files/docs/idkeys/gs1_gmn_executive_summary.pdf
+* https://www.gs1.org/services/gmn-generator
+* https://en.wikipedia.org/wiki/Check_digit
