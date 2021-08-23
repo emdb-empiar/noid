@@ -22,11 +22,18 @@ parser.add_argument(
     '-c', '--config-file',
     help="path to a config file with a noid section"
 )
-parser.add_argument(
-    '-v', '--validate',
+noid_action = parser.add_mutually_exclusive_group()
+noid_action.add_argument(
+    '-V', '--validate',
     action='store_true',
     default=False,
     help="validate the given noid [default: False]"
+)
+noid_action.add_argument(
+    '-d', '--check-digit',
+    action='store_true',
+    default=False,
+    help="compute and print the corresponding check digit for the given noid [default: False]"
 )
 parser.add_argument(
     '-s', '--scheme',
@@ -50,7 +57,7 @@ parser.add_argument(
     help="a number for which to generate a valid noid [default: random positive integer]"
 )
 parser.add_argument(
-    '--verbose',
+    '-v', '--verbose',
     action='store_true',
     default=False,
     help="turn on verbose text [default: False]"
@@ -94,12 +101,13 @@ def parse_args():
                 if o in configs['noid']:
                     setattr(args, o, configs.get('noid', o))
                 else:
-                    print(f"warning: configs missing option '{o}'; using default value ({getattr(args, o)})", file=sys.stderr)
+                    print(f"warning: configs missing option '{o}'; using default value ({getattr(args, o)})",
+                          file=sys.stderr)
         else:
             print(f"warning: config file '{args.config_file}' lacks 'noid' section; ignoring config file",
                   file=sys.stderr)
     # argument validation
-    if args.validate and args.noid is None:
+    if (args.validate or args.check_digit) and args.noid is None:
         print("error: missing noid to validate", file=sys.stderr)
         return None
     return args

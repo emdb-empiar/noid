@@ -27,13 +27,16 @@ noid -t/--template zeek
 noid -n/--index
 
 """
+import io
+import os
+import pathlib
 import random
 import re
+import sys
+import tempfile
 import unittest
 
 from noid import cli, pynoid, utils
-
-import pathlib
 
 BASE_DIR = pathlib.Path(__file__).parent.parent
 CONFIG_FILE = BASE_DIR / 'noid' / 'noid.cfg'
@@ -53,7 +56,16 @@ class PynoidCLI(unittest.TestCase):
 
     def test_validate(self):
         """Validation requires noid positional argument"""
-        self.assertIsNone(cli.cli(f"noid -v"))
+        self.assertIsNone(cli.cli(f"noid -V"))
+
+    def test_check_digit(self):
+        """Show the check digit for the given string"""
+        args = cli.cli(f"noid -d 123456")
+        self.assertEqual('123456', args.noid)
+        self.assertTrue(args.check_digit)
+        # you cannot validate and check at the same time
+        with self.assertRaises(SystemExit):
+            cli.cli(f"noid -d -V 123456")
 
     def test_config(self):
         """Using a config file"""
@@ -66,6 +78,37 @@ class PynoidCLI(unittest.TestCase):
         self.assertEqual('zeeeeddddk', args.template)
         self.assertEqual(-1, args.index)
         self.assertFalse(args.verbose)
+        sys.stdout = io.StringIO()
+        configs = cli.read_configs(args)
+        print(configs)
+        self.assertRegex(sys.stdout.getvalue(), r"(?ms:.*[[]noid[]].*template.*scheme.*naa.*)")
+
+    def test_missing_noid_validate(self):
+        """Print error for validating a blank noid"""
+        args = cli.cli(f"noid -V")
+        self.assertIsNone(args)
+
+    def test_invalid_configs(self):
+        """Use defaults when configs invalid"""
+        # case 1: no 'noid' section
+        _configs = """[noids]\ntemplate = zeedddeeek\nscheme = doi:\nnaa = 1234\n"""
+        temp_configs = tempfile.NamedTemporaryFile()
+        with open(temp_configs.name, 'w') as f:
+            print(_configs, file=f)
+        sys.stdout = sys.stderr = io.StringIO()
+        cli.cli(f"noid -c {temp_configs.name}")
+        self.assertRegex(sys.stderr.getvalue(), r"(?ms:^warning: config file .* lacks 'noid' section.*ignoring.*)")
+        # case 2: some sections missing
+        _configs = """[noid]\ntemplates = zeedddeeek\nschemes = doi:\nnaat = 1234\n"""
+        temp_configs = tempfile.NamedTemporaryFile()
+        with open(temp_configs.name, 'w') as f:
+            print(_configs, file=f)
+        sys.stderr = io.StringIO()
+        cli.cli(f"noid -c {temp_configs.name}")
+        self.assertRegex(
+            sys.stderr.getvalue(),
+            r"(?ms:^warning: configs missing option 'template'.*missing option 'scheme'.*missing option 'naa'.*)"
+        )
 
 
 class PynoidAPI(unittest.TestCase):
@@ -123,6 +166,68 @@ class PynoidAPI(unittest.TestCase):
         args = cli.cli(f"noid --template abcdefg")
         noid = pynoid.mint(template=args.template, n=args.index, scheme=args.scheme, naa=args.naa)
         self.assertEqual('', noid)
+
+
+class PynoidNoid(unittest.TestCase):
+    """Tests for the entry point"""
+
+    def test_default(self):
+        """The result of simply calling 'noid'"""
+        cli.cli(f"noid -v")
+        sys.stdout = sys.stderr = io.StringIO()
+        pynoid.main()
+        self.assertRegex(sys.stdout.getvalue(), r"(?ms:^info: generating noid.*template=.*scheme=.*ark[:][/][\w\d]+)")
+
+    def test_error(self):
+        """Exit status on *nix is os.EX_USAGE"""
+        cli.cli(f"noid -V")
+        ex = pynoid.main()
+        self.assertEqual(os.EX_USAGE, ex)
+
+    def test_config(self):
+        """Using config"""
+        cli.cli(f"noid -v -c {CONFIG_FILE}")
+        sys.stdout = sys.stderr = io.StringIO()
+        pynoid.main()
+        self.assertRegex(
+            sys.stdout.getvalue(),
+            r"(?ms:^info: generating noid.*template=zeeeeddddk.*scheme="
+            r"http[:][/][/].*naa=83812.*http[:][/][/]83812[/][\w\d]+)"
+        )
+
+    def test_validate(self):
+        """Using check digit"""
+        noid = 'xg64G'
+        cli.cli(f"noid -v -V {noid}")
+        sys.stdout = sys.stderr = io.StringIO()
+        pynoid.main()
+        self.assertRegex(sys.stdout.getvalue(), rf"(?ms:^info: validating '{noid}'.*'{noid}' valid[?] True)")
+
+    def test_check_digit(self):
+        """Using check digit"""
+        noid = '123456'
+        check_digit = pynoid.calculate_check_digit(noid)
+        cli.cli(f"noid -v -d {noid}")
+        sys.stdout = sys.stderr = io.StringIO()
+        pynoid.main()
+        self.assertRegex(sys.stdout.getvalue(), rf"(?ms:^info: computing check digit for '{noid}'.*{check_digit})")
+
+    def test_scheme_naa_template(self):
+        """Minting options"""
+        cli.cli(f"noid -v -t zeeddk -s https:// -N 54321")
+        sys.stdout = sys.stderr = io.StringIO()
+        pynoid.main()
+        self.assertRegex(sys.stdout.getvalue(),
+                         r"(?ms:^info: generating noid.*template=zeeddk.*scheme=https[:][/][/].*naa=54321.*https[:][/][/]54321[/][\w\d]+)")
+
+    def test_index(self):
+        """Set index"""
+        index = random.randint(1000, 2000)
+        cli.cli(f"noid -v -n {index}")
+        sys.stdout = sys.stderr = io.StringIO()
+        pynoid.main()
+        self.assertRegex(sys.stdout.getvalue(),
+                         rf"(?ms:^info: generating noid.*template=zeeddk.*n={index}.*scheme=ark[:][/].*naa=.*ark[:][/][\w\d]+)")
 
 
 class PynoidUtils(unittest.TestCase):

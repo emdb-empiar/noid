@@ -25,9 +25,9 @@ noid
 There are various options available using `-h/--help`:
 ```shell
 noid -h
-usage: noid [-h] [-c CONFIG_FILE] [-v] [-s SCHEME] [-N NAA] [-t TEMPLATE] [-n INDEX] [--verbose] [noid]
+usage: noid [-h] [-c CONFIG_FILE] [-V | -d] [-s SCHEME] [-N NAA] [-t TEMPLATE] [-n INDEX] [-v] [noid]
 
-generate nice and opaque identifiers (noids)
+generate nice and opaque identifiers
 
 positional arguments:
   noid                  a noid
@@ -36,7 +36,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -c CONFIG_FILE, --config-file CONFIG_FILE
                         path to a config file with a noid section
-  -v, --validate        validate the given noid [default: False]
+  -V, --validate        validate the given noid [default: False]
+  -d, --check-digit     compute and print the corresponding check digit for the given noid [default: False]
   -s SCHEME, --scheme SCHEME
                         the noid scheme [default: 'ark:/']
   -N NAA, --naa NAA     the name assigning authority (NAA) number [default: ]
@@ -44,7 +45,7 @@ optional arguments:
                         the template by which to generate noids [default: 'zeeddk']
   -n INDEX, --index INDEX
                         a number for which to generate a valid noid [default: random positive integer]
-  --verbose             turn on verbose text [default: False]
+  -v, --verbose         turn on verbose text [default: False]
 
 ```
 
@@ -53,6 +54,13 @@ Validate a noid using the `-v/--validate` flag and pass a noid.
 ```shell
 noid -v $(noid) # self-validation
 ```
+
+### Compute the check digit for a noid
+Compute the check digit using `-d/--check-digit` flag and pass a noid.
+```shell
+noid -d $(noid -t zeee -n 1234) && noid -t zeee -n 1234 && noid -t zeeek -n 1234
+```
+The example above prints out the check digit, the full noid without a check digit and the full noid with a check digit. 
 
 ### Options
 #### Specify the NAA

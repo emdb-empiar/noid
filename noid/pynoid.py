@@ -5,7 +5,7 @@ from random import randint
 from noid import utils, cli
 
 
-def mint(template='zek', n=-1, scheme='', naa='') -> str:
+def mint(template: str = 'zek', n: int = -1, scheme: str = '', naa: str = '') -> str:
     """ Mint identifiers according to template with a prefix of scheme + naa.
 
     :param str template: a string consisting of GENTYPE + (DIGTYPE)+ [+ CHECKDIGIT]
@@ -52,7 +52,7 @@ def mint(template='zek', n=-1, scheme='', naa='') -> str:
     return noid
 
 
-def generate_noid(mask:str, n:int) -> str:
+def generate_noid(mask: str, n: int) -> str:
     """The actual noid generation
 
     :param str mask: the mask string
@@ -134,6 +134,7 @@ def calculate_check_digit(noid: str) -> str:
         try:
             return utils.XDIGIT.index(x)
         except:
+            print(f"error: invalid character '{x}'; digits should be in '{''.join(utils.XDIGIT)}'", file=sys.stderr)
             return 0
 
     total = list()
@@ -152,6 +153,11 @@ def main():
         if args.verbose:
             print(f"info: validating '{args.noid}'...", file=sys.stderr)
         print(f"'{args.noid}' valid? {validate(args.noid)}")
+    elif args.check_digit:
+        if args.verbose:
+            print(f"info: computing check digit for '{args.noid}'...", file=sys.stderr)
+        check_digit = calculate_check_digit(args.noid)
+        print(check_digit)
     else:
         if args.verbose:
             print(f"info: generating noid using template={args.template}, n={args.index}, "
