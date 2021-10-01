@@ -197,7 +197,7 @@ class PynoidNoid(unittest.TestCase):
 
     def test_validate(self):
         """Using check digit"""
-        noid = 'xg64G'
+        noid = pynoid.mint(template='zeeeek')
         cli.cli(f"noid -v -V {noid}")
         sys.stdout = sys.stderr = io.StringIO()
         pynoid.main()
@@ -321,8 +321,8 @@ class PynoidTests(unittest.TestCase):
 
     def test_validate_valid(self):
         """Given some valid noids check that they are valid"""
-        valid = 'test31wqw0ws8'
-        valid_scheme = 'ark:/test31wqw0ws8'
+        valid = 'test31wqw0ws7'
+        valid_scheme = 'ark:/test31wqw0ws7'
         self.assertTrue(pynoid.validate(valid))
         self.assertTrue(pynoid.validate(valid_scheme))
 
@@ -335,7 +335,7 @@ class PynoidTests(unittest.TestCase):
 
     def test_checkdigit(self):
         """The check digit is sensitive to permutations"""
-        self.assertEqual('1Kw', pynoid.mint('eek', 100))
+        self.assertEqual('1Hs', pynoid.mint('eek', 100))
         self.assertFalse(pynoid.validate('K1w'))
 
 
