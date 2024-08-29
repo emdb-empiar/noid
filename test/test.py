@@ -179,10 +179,11 @@ class PynoidNoid(unittest.TestCase):
         self.assertRegex(sys.stdout.getvalue(), r"(?ms:^info: generating noid.*template=.*scheme=.*ark[:][/][\w\d]+)")
 
     def test_error(self):
-        """Exit status on *nix is os.EX_USAGE"""
+        """Exit status on *nix is os.EX_USAGE, but its not available on Windows"""
+        USAGE_EXIT_CODE = getattr(os, 'EX_USAGE', 64)
         cli.cli(f"noid -V")
         ex = pynoid.main()
-        self.assertEqual(os.EX_USAGE, ex)
+        self.assertEqual(USAGE_EXIT_CODE, ex)
 
     def test_config(self):
         """Using config"""
