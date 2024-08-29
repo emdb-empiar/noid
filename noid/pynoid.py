@@ -4,6 +4,9 @@ from random import randint
 
 from noid import utils, cli
 
+# make exit codes cross-platform
+SUCCESS_EXIT_CODE = getattr(os, 'EX_OK', 0)
+USAGE_EXIT_CODE = getattr(os, 'EX_USAGE', 64)
 
 def mint(template: str = 'zek', n: int = -1, scheme: str = '', naa: str = '') -> str:
     """ Mint identifiers according to template with a prefix of scheme + naa.
@@ -148,7 +151,7 @@ def main():
     """Main entry point"""
     args = cli.parse_args()
     if args is None:
-        return os.EX_USAGE
+        return USAGE_EXIT_CODE
     if args.validate:
         if args.verbose:
             print(f"info: validating '{args.noid}'...", file=sys.stderr)
@@ -164,7 +167,7 @@ def main():
                   f"scheme={args.scheme}, naa={args.naa}...", file=sys.stderr)
         noid = mint(args.template, args.index, scheme=args.scheme, naa=args.naa)
         print(noid)
-    return os.EX_OK
+    return SUCCESS_EXIT_CODE
 
 
 if __name__ == '__main__':
