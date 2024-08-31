@@ -12,8 +12,8 @@ pip install noid
 ```
 or from source with
 ```
-pip install git+git@github.com:paulkorir/noid.git     # SSH
-pip install git+https://github.com/paulkorir/noid.git # HTTPS
+pip install git+git@github.com:emdb-empiar/noid.git     # SSH
+pip install git+https://github.com/emdb-empiar/noid.git # HTTPS
 ```
 
 ## CLI Usage

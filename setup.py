@@ -3,7 +3,7 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-NOID_VERSION = "1.1.2"
+NOID_VERSION = "1.1.3"
 
 if __name__ == "__main__":
     setuptools.setup(
